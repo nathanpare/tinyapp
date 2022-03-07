@@ -35,11 +35,18 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
+
   let longURL = req.body.longURL;
-  const shortURL = generateRandomString(6);
-  if (longURL.slice(0, 4) !== "http") {
+  if (!longURL) {
+    return res.status(400).send("longURL not found");
+  }
+
+  const urlHasHttp = longURL.slice(0, 4) === "http";
+  if (!urlHasHttp) {
     longURL = "http://" + longURL;
   }
+  
+  const shortURL = generateRandomString(6);
   urlDatabase[shortURL] = longURL;
   console.log("++++++++++", urlDatabase);
   res.redirect(`/urls/${shortURL}`)
@@ -66,6 +73,25 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect("/urls");
+});
+
+app.post("/urls/:shortURL/edit", (req, res) => {
+  console.log(req.body);  // Log the POST request body to the console
+
+  let longURL = req.body.longURL;
+  if (!longURL) {
+    return res.status(400).send("longURL not found");
+  }
+
+  const urlHasHttp = longURL.slice(0, 4) === "http";
+  if (!urlHasHttp) {
+    longURL = "http://" + longURL;
+  }
+  
+  const shortURL = req.params.shortURL;
+  urlDatabase[shortURL] = longURL;
+  console.log("++++++++++", urlDatabase);
+  res.redirect(`/urls/${shortURL}`)
 });
 
 app.listen(PORT, () => {
