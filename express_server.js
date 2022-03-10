@@ -3,6 +3,8 @@ const cookieParser = require('cookie-parser')
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const { use } = require("express/lib/application");
+const req = require("express/lib/request");
+const res = require("express/lib/response");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -62,7 +64,7 @@ app.get("/hello", (req, res) => {
 // res.render("urls_index", templateVars);
 app.get("/urls", (req, res) => {
   if (!req.cookies.user_id) {
-    return res.redirect("/register");
+    return res.redirect("/login");
   }
   for (let user in users) {
     if (users[user].id === req.cookies.user_id) {
@@ -94,7 +96,7 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   if (!req.cookies.user_id) {
-    return res.redirect("/register");
+    return res.redirect("/login");
   }
   for (let user in users) {
     if (users[user].id === req.cookies.user_id) {
@@ -108,7 +110,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
   if (!req.cookies.user_id) {
-    return res.redirect("/register");
+    return res.redirect("/login");
   }
   for (let user in users) {
     if (users[user].id === req.cookies.user_id) {
@@ -150,10 +152,19 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   res.redirect(`/urls/${shortURL}`)
 });
 
-app.post("/urls/login", (req, res) => {
-  res.cookie("username", req.body.username)
-  res.redirect("/urls");
+// app.post("/urls/login", (req, res) => {
+//   res.cookie("username", req.body.username)
+//   res.redirect("/urls");
+// });
+
+app.get("/login", (req, res) => {
+  const templateVars = { user: null }
+  res.render("urls_login", templateVars);
 });
+
+app.post("/login", (req, res) => {
+
+})
 
 app.post("/urls/logout", (req, res) => {
   res.clearCookie("user_id");
