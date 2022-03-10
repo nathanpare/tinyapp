@@ -1,8 +1,10 @@
 const express = require("express");
 const cookieParser = require('cookie-parser')
+const bodyParser = require("body-parser");
+const morgan = require("morgan");
+const { use } = require("express/lib/application");
 const app = express();
 const PORT = 8080; // default port 8080
-const bodyParser = require("body-parser");
 
 function generateRandomString(length) {
   return Math.round((Math.pow(36, length + 1) - Math.random() * Math.pow(36, length))).toString(36).slice(1);
@@ -10,6 +12,7 @@ function generateRandomString(length) {
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
+app.use(morgan('dev'));
 
 app.set("view engine", "ejs");
 
@@ -29,6 +32,16 @@ const users = {
     email: "user2@example.com", 
     password: "dishwasher-funk"
   }
+}
+
+function findUserByEmail(email) {
+  for (let userId in users) {
+    if (users[userId].email === email) {
+      return users[userId];
+      
+    }
+  }
+  return null;
 }
 
 app.get("/", (req, res) => {
@@ -153,9 +166,20 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  console.log(req.body);
   const email = req.body.email;
   const password = req.body.password;
+  if (password === "" || email === "") {
+    return res.status(400).send("missing registration field");
+  }
+  // for (let user in users) {
+  //   if (users[user].email === email){
+  //     return res.status(400).send("this user already exists");
+  //   }
+  // }
+  const user = findUserByEmail(req.body.email);
+  if (user) {
+    return res.status(400).send("this user already exists");
+  }
   const userId = generateRandomString(6);
   users[userId] = {
     id: userId,
@@ -163,10 +187,9 @@ app.post("/register", (req, res) => {
     password
   }
   res.cookie("user_id", userId);
-  console.log(users);
   res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`tinyapp listening on port ${PORT}!`);
 });
