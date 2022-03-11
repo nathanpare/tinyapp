@@ -57,10 +57,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
-// const templateVars = {
-//   username: req.cookies["username"],
-//   // ... any other vars
-// };
+
 // res.render("urls_index", templateVars);
 app.get("/urls", (req, res) => {
   if (!req.cookies.user_id) {
@@ -152,19 +149,33 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   res.redirect(`/urls/${shortURL}`)
 });
 
-// app.post("/urls/login", (req, res) => {
-//   res.cookie("username", req.body.username)
-//   res.redirect("/urls");
-// });
-
 app.get("/login", (req, res) => {
   const templateVars = { user: null }
   res.render("urls_login", templateVars);
 });
 
 app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const id = req.body.id;
+  if (password === "" || email === "") {
+    return res.status(403).send("missing login field");
+  }
+  
+  const user = findUserByEmail(email);
+  if (!user) {
+    return res.status(403).send("this user account doesn't exist");
+  }
+  console.log("user", user);
+  
+  if (user.password !== password) {
+  return res.status(403).send("this password is incorrect");
+  }
+  
+  res.cookie("user_id", user.id);
+  res.redirect("/urls");
 
-})
+});
 
 app.post("/urls/logout", (req, res) => {
   res.clearCookie("user_id");
@@ -182,21 +193,20 @@ app.post("/register", (req, res) => {
   if (password === "" || email === "") {
     return res.status(400).send("missing registration field");
   }
-  // for (let user in users) {
-  //   if (users[user].email === email){
-  //     return res.status(400).send("this user already exists");
-  //   }
-  // }
-  const user = findUserByEmail(req.body.email);
+  
+  const user = findUserByEmail(email);
   if (user) {
     return res.status(400).send("this user already exists");
   }
+  
   const userId = generateRandomString(6);
   users[userId] = {
     id: userId,
     email,
     password
   }
+  console.log(users);
+  
   res.cookie("user_id", userId);
   res.redirect("/urls");
 });
