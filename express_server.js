@@ -2,8 +2,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
-const req = require("express/lib/request");
-const res = require("express/lib/response");
+const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -194,11 +193,10 @@ app.post("/login", (req, res) => {
   if (!user) {
     return res.status(403).send("this user account doesn't exist");
   }
-
-  if (user.password !== password) {
+  // unsecure method: if (user.password !== password) {
+    if (bcrypt.compareSync(password, user.hashedPassword) === false) {
     return res.status(403).send("this password is incorrect");
   }
-
   res.cookie("user_id", user.id);
   res.redirect("/urls");
 });
@@ -216,6 +214,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   if (password === "" || email === "") {
     return res.status(400).send("missing registration field");
   }
@@ -229,9 +228,9 @@ app.post("/register", (req, res) => {
   users[userId] = {
     id: userId,
     email,
-    password,
+    hashedPassword,
   };
-
+  console.log(users[userId]);
   res.cookie("user_id", userId);
   res.redirect("/urls");
 });
