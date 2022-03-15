@@ -8,7 +8,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const { getUserByEmail } = require('./helpers.js');
 
-const generateRandomString = function (length) {
+const generateRandomString = function(length) {
   return Math.round(
     Math.pow(36, length + 1) - Math.random() * Math.pow(36, length)
   )
@@ -50,7 +50,7 @@ const users = {
   },
 };
 
-const urlsForUser = function (id) {
+const urlsForUser = function(id) {
   const userUrl = {};
   for (let url in urlDatabase) {
     if (id === urlDatabase[url].userID) {
@@ -84,7 +84,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/error", (req, res) => {
-  res.render("urls_noID",)
+  res.render("urls_noID",);
 });
 
 app.post("/urls", (req, res) => {
@@ -139,8 +139,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  let longURL = urlDatabase[shortURL];
-  req.session = null;
+  const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -191,7 +190,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("this user account doesn't exist");
   }
   // unsecure method: if (user.password !== password) {
-    if (bcrypt.compareSync(password, user.hashedPassword) === false) {
+  if (bcrypt.compareSync(password, user.hashedPassword) === false) {
     return res.status(403).send("this password is incorrect");
   }
   req.session.user_id = user.id;
