@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const bcrypt = require('bcryptjs');
@@ -17,6 +18,10 @@ const generateRandomString = function (length) {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
+app.use(cookieSession({
+  name: 'session',
+  keys: ['asdf'],
+}));
 
 app.set("view engine", "ejs");
 
@@ -76,12 +81,12 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.redirect("/urls/error");
   }
   const templateVars = {
-    urls: urlsForUser(req.cookies.user_id),
-    user: users[req.cookies.user_id],
+    urls: urlsForUser(req.session.user_id),
+    user: users[req.session.user_id],
   };
   return res.render("urls_index", templateVars);
 });
@@ -91,7 +96,7 @@ app.get("/urls/error", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.status(400).send("Only account holders may create short urls");
   }
 
@@ -106,7 +111,7 @@ app.post("/urls", (req, res) => {
   }
 
   const shortURL = generateRandomString(6);
-  const userID = req.cookies.user_id;
+  const userID = req.session.user_id;
   urlDatabase[shortURL] = { longURL, userID };
   console.log("++++++++++", urlDatabase);
   res.redirect(`/urls/${shortURL}`);
@@ -114,21 +119,21 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   console.log("hello");
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.redirect("/urls/error");
   }
-  const templateVars = { user: users[req.cookies.user_id] };
+  const templateVars = { user: users[req.session.user_id] };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.redirect("/login");
   }
   for (let user in users) {
-    if (users[user].id === req.cookies.user_id) {
+    if (users[user].id === req.session.user_id) {
       const templateVars = {
         shortURL,
         longURL,
@@ -143,12 +148,12 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   let longURL = urlDatabase[shortURL];
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect(longURL);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.redirect("/urls/error");
   }
   const shortURL = req.params.shortURL;
@@ -167,7 +172,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
     longURL = "http://" + longURL;
   }
   
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.redirect("/urls/error");
   }
 
@@ -197,12 +202,12 @@ app.post("/login", (req, res) => {
     if (bcrypt.compareSync(password, user.hashedPassword) === false) {
     return res.status(403).send("this password is incorrect");
   }
-  res.cookie("user_id", user.id);
+  req.session.user_id = user.id;
   res.redirect("/urls");
 });
 
 app.post("/urls/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/login");
 });
 
@@ -231,7 +236,7 @@ app.post("/register", (req, res) => {
     hashedPassword,
   };
   console.log(users[userId]);
-  res.cookie("user_id", userId);
+  req.session.user_id = userId;
   res.redirect("/urls");
 });
 
