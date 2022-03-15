@@ -6,6 +6,7 @@ const morgan = require("morgan");
 const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080; // default port 8080
+const { getUserByEmail } = require('./helpers.js');
 
 const generateRandomString = function (length) {
   return Math.round(
@@ -47,15 +48,6 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk",
   },
-};
-
-const findUserByEmail = function (email) {
-  for (let userId in users) {
-    if (users[userId].email === email) {
-      return users[userId];
-    }
-  }
-  return null;
 };
 
 const urlsForUser = function (id) {
@@ -194,7 +186,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("missing login field");
   }
 
-  const user = findUserByEmail(email);
+  const user = getUserByEmail(email, users);
   if (!user) {
     return res.status(403).send("this user account doesn't exist");
   }
@@ -224,7 +216,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("missing registration field");
   }
 
-  const user = findUserByEmail(email);
+  const user = getUserByEmail(email, users);
   if (user) {
     return res.status(400).send("this user already exists");
   }
