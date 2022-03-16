@@ -4,6 +4,7 @@ const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const bcrypt = require('bcryptjs');
+const methodOverride = require('method-override')
 const app = express();
 const PORT = 8080; // default port 8080
 const { getUserByEmail } = require('./helpers.js');
@@ -23,6 +24,7 @@ app.use(cookieSession({
   name: 'session',
   keys: ['asdf'],
 }));
+app.use(methodOverride('_method'));
 
 app.set("view engine", "ejs");
 
@@ -143,7 +145,7 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL", (req, res) => {
   if (!req.session.user_id) {
     return res.redirect("/urls/error");
   }
@@ -152,7 +154,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/urls/:shortURL/edit", (req, res) => {
+app.put("/urls/:shortURL", (req, res) => {
   let longURL = req.body.longURL;
   if (!longURL) {
     return res.status(400).send("longURL not found");
