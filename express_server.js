@@ -107,12 +107,10 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6);
   const userID = req.session.user_id;
   urlDatabase[shortURL] = { longURL, userID };
-  console.log("++++++++++", urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/new", (req, res) => {
-  console.log("hello");
   if (!req.session.user_id) {
     return res.redirect("/urls/error");
   }
@@ -228,7 +226,6 @@ app.post("/register", (req, res) => {
     email,
     hashedPassword,
   };
-  console.log(users[userId]);
   req.session.user_id = userId;
   res.redirect("/urls");
 });
